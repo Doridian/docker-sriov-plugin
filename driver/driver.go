@@ -203,6 +203,7 @@ func (d *driver) _CreateNetwork(nid string, options map[string]string,
 		nwDbEntry.Netdev = options[networkDevice]
 		nwDbEntry.Vlan, _ = strconv.Atoi(options[sriovVlan])
 		nwDbEntry.Gateway = ipv4Data.Gateway
+		nwDbEntry.Prefix = options[ethPrefix]
 
 		if options[networkPrivileged] == "1" {
 			nwDbEntry.Privileged = true
@@ -284,6 +285,7 @@ func BuildNetworkOptions(nwDbEntry *Db_Network_Info) (map[string]string, error) 
 	} else {
 		options[networkPrivileged] = "0"
 	}
+	options[ethPrefix] = nwDbEntry.Prefix
 	return options, nil
 }
 

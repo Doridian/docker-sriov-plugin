@@ -32,6 +32,7 @@ type Db_Network_Info struct {
 	Gateway    string `json:"Gateway"`
 	Vlan       int    `json:"vlan"`
 	Privileged bool   `json:"Privileged"`
+	Prefix     string `json:"Prefix"`
 }
 
 /* Endpoint config.json */
