@@ -27,7 +27,7 @@ func Run(ctx *cli.Context) {
 
 	err = h.ServeUnix("sriov", 0)
 	if err != nil {
-		log.Fatal("Run app error: %s", err.Error())
+		log.Fatalf("Run app error: %s", err.Error())
 		os.Exit(1)
 	}
 }
