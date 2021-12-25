@@ -1,29 +1,15 @@
-name: Publish Docker image
-on:
-  push:
-    branches:
-      - master
+on: 
+  release:
+    types: [created]
+
 jobs:
-  push_to_registry:
-    name: Push Docker image to GitHub Packages
+  release-linux-amd64:
+    name: release linux/amd64
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-      - name: Log in to GitHub Docker Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build container image
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          build-args: |
-            GIT_REVISION=${{ github.sha }}
-          tags: |
-            ghcr.io/doridian/docker-sriov-plugin/docker-sriov-plugin:latest
+    - uses: actions/checkout@v2
+    - uses: wangyoucao577/go-release-action@v1.22
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: linux
+        goarch: amd64
