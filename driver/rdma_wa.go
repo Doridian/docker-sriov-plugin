@@ -1,8 +1,9 @@
 package driver
 
 import (
-	"github.com/Mellanox/rdmamap"
 	"path/filepath"
+
+	"github.com/Mellanox/rdmamap"
 )
 
 func setRoceHopLimitWA(netdevice string, hopLimit uint8) error {

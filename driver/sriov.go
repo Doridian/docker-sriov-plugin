@@ -2,10 +2,11 @@ package driver
 
 import (
 	"fmt"
-	"github.com/Mellanox/sriovnet"
-	"github.com/docker/go-plugins-helpers/network"
 	"log"
 	"strconv"
+
+	"github.com/Mellanox/sriovnet"
+	"github.com/docker/go-plugins-helpers/network"
 )
 
 const (

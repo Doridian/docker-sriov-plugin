@@ -2,10 +2,6 @@ package driver
 
 import (
 	"fmt"
-	"github.com/Mellanox/sriovnet"
-	"github.com/docker/go-plugins-helpers/network"
-	"github.com/docker/libnetwork/netlabel"
-	"github.com/docker/libnetwork/options"
 	"log"
 	"net"
 	"os"
@@ -13,6 +9,11 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+
+	"github.com/Mellanox/sriovnet"
+	"github.com/docker/go-plugins-helpers/network"
+	"github.com/docker/libnetwork/netlabel"
+	"github.com/docker/libnetwork/options"
 )
 
 const (

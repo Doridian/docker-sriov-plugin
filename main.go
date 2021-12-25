@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
-	"github.com/docker/go-plugins-helpers/network"
 	"log"
 	"os"
 
-	"docker-sriov-plugin/driver"
+	"github.com/docker/go-plugins-helpers/network"
+	"github.com/urfave/cli"
+
+	"github.com/Doridian/docker-sriov-plugin/driver"
 )
 
 const (
