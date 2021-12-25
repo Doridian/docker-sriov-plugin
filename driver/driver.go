@@ -296,12 +296,6 @@ func (d *driver) CreatePersistentNetworks() error {
 	}
 
 	for _, n := range nwList {
-		if IsNetworkIdValid(n.NetworkID) == false {
-			nwDir := filepath.Join(persistConfigPath, n.NetworkID)
-			os.RemoveAll(nwDir)
-			log.Println("Skipping and deleting stale network: ", n.NetworkID)
-			continue
-		}
 		options, _ := BuildNetworkOptions(&n.Info)
 
 		ipv4Data := network.IPAMData{}
@@ -313,6 +307,23 @@ func (d *driver) CreatePersistentNetworks() error {
 		 * completely unaware of.
 		 */
 		_ = d._CreateNetwork(n.NetworkID, options, &ipv4Data, false)
+	}
+	return nil
+}
+
+func (d *driver) ValidatePersistentNetworks() error {
+	nwList, err := Read_Past_Config(persistConfigPath)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range nwList {
+		if IsNetworkIdValid(n.NetworkID) == false {
+			nwDir := filepath.Join(persistConfigPath, n.NetworkID)
+			os.RemoveAll(nwDir)
+			log.Println("Skipping and deleting stale network: ", n.NetworkID)
+			continue
+		}
 	}
 	return nil
 }
@@ -334,6 +345,8 @@ func StartDriver() (*driver, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	go driver.ValidatePersistentNetworks()
 
 	return driver, nil
 }
