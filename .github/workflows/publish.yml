@@ -11,5 +11,6 @@ jobs:
     - uses: wangyoucao577/go-release-action@v1.22
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        asset_name: docker-sriov-plugin-linux-amd64
         goos: linux
         goarch: amd64
