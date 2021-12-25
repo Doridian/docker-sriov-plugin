@@ -1,10 +1,11 @@
+name: Publish plugin
 on: 
   release:
     types: [created]
 
 jobs:
-  release-plugin:
-    name: release plugin
+  publish_plugin:
+    name: publish plugin
     runs-on: ubuntu-latest
     strategy:
       matrix:
