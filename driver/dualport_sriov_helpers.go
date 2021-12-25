@@ -44,7 +44,7 @@ func checkMultiPortDevice(netdevName string) bool {
 func ibdev2netdevString() ([]string, error) {
 	var outStr string
 
-	out, err := exec.Command("/tmp/tools/ibdev2netdev").Output()
+	out, err := exec.Command("/usr/local/bin/ibdev2netdev").Output()
 	if err != nil {
 		return nil, err
 	}
