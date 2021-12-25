@@ -52,24 +52,22 @@ The quickstart instructions describe how to start the plugin and make use of it.
 
 **1.** Make sure you are using Docker 1.9 or later
 
-**2.** Get the new plugin
+**2.** Download the latest release from releases
 
+**3.** Extract archive to temporary folder
+
+**4.** Copy ibdev2netdev and docker-sriov-plugin to /usr/local/bin
+
+**5.** Copy docker-sriov-plugin.service to /etc/systemd/system
+
+**6.**
 ```
-$ docker pull rdma/sriov-plugin
+# systemctl enable --now docker-sriov-plugin.service
 ```
 
-**3.** Run the plugin now
-```
-$ docker run -v /run/docker/plugins:/run/docker/plugins -v /etc/docker:/etc/docker -v /var/run:/var/run --net=host --privileged rdma/sriov-plugin
-```
-This will start the container and emits console logs of the plugin where its started.
-The powerful aspect of this is, it doesn't require user/administrator to restart the docker engine.
+**7.** Test it out - SRIOV mode
 
-This persists the network configuration in /etc/docker/mellanox directory.
-
-**4.** Test it out - SRIOV mode
-
-**4.1** Now you are ready to create a new network
+**7.1** Now you are ready to create a new network
 
 Below ens2f0 is PF based netdevice.
 Mode is set to sriov, so plugin driver will automatically assign right VF netdevice
@@ -80,13 +78,13 @@ Subnet of the netdevice of container and host can be different.
 $ docker network create -d sriov --subnet=194.168.1.0/24 -o netdevice=ens2f0 mynet
 ```
 
-**4.2** Now you are ready run container to make use of passthrough-sriov network and its interface
+**7.2** Now you are ready run container to make use of passthrough-sriov network and its interface
 ```
 $ docker run --net=mynet -itd --name=web nginx
 
 ```
 
-**4.3** Multi tenant support in SRIOV mode
+**7.3** Multi tenant support in SRIOV mode
 
 There might be a need to isolate containers to groups/tenants.
 This plugin allows to create vlan based layer 2 networks.
@@ -114,7 +112,7 @@ $ docker run --net=customer2 -itd --name=web nginx
 ```
 
 
-**4.4** Secure networks
+**7.4** Secure networks
 
 By default this plugin creates unprivileged networks. This means all containers in such network will not be able to perform spoof attack or sniff packets of other containers.
 This plugin uses such hardware offload features for spoofing attacks.
@@ -127,7 +125,7 @@ Below command created privileged network. All containers running in this network
 $ docker network create -d sriov --subnet=194.168.1.0/24 -o netdevice=ens2f0 -o vlan=100 -o privileged=1 customer1
 ```
 
-**4.5** Selecting specific VF based on MAC address for a container
+**7.5** Selecting specific VF based on MAC address for a container
 
 There might be a need for a user to choose a specific VF from the available pool.
 This is supported based on specifing the MAC address while starting a container.
@@ -137,22 +135,22 @@ $ docker run --net=customer1 --mac-address=<valid_mac_address_of_desired_vf> -it
 ```
 
 
-**5.** Test it out Passthrough mode
+**8.** Test it out Passthrough mode
 
-**5.1** Now you are ready to create a new network
+**8.1** Now you are ready to create a new network
 
 ```
 $ docker network create -d sriov --subnet=194.168.1.0/24 -o netdevice=ens2f0 -o mode=passthrough mynet
 ```
 
-**5.2** Now you are ready run container to make use of passthrough network and its interface
+**8.2** Now you are ready run container to make use of passthrough network and its interface
 ```
 $ docker run --net=mynet -itd --name=web nginx
 
 ```
 
 
-**6.** Network Creation options list
+**9.** Network Creation options list
 
 1. netdevice - PF/parent network device to use for creating netdevice interfaces
 2. mode - passthrough/sriov
@@ -162,4 +160,4 @@ $ docker run --net=mynet -itd --name=web nginx
 
 ### Limitations
 
-It supported on Linux environment on x86_64 and ppc64le platforms.
+It only supports Linux on amd64, 386 and arm64
