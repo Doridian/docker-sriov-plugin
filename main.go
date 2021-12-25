@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	version = "1.1.1"
+	version = "DEV"
 )
 
 // Run initializes the driver
