@@ -10,9 +10,7 @@ import (
 	"github.com/Doridian/docker-sriov-plugin/driver"
 )
 
-const (
-	version = "DEV"
-)
+var version = "DEV"
 
 // Run initializes the driver
 func Run(ctx *cli.Context) {
