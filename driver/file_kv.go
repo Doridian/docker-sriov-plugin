@@ -20,7 +20,7 @@ config/
 */
 
 /* Network config.json */
-type Db_Network_Info struct {
+type DbNetworkInfo struct {
 	Version    uint32 `json:"Version"`
 	Netdev     string `json:"Netdevice"`
 	Mode       string `json:"Mode"`
@@ -30,7 +30,7 @@ type Db_Network_Info struct {
 	Prefix     string `json:"Prefix"`
 }
 
-func Write_Nw_Config_to_DB(nwKey string, nw *Db_Network_Info) error {
+func WriteNwConfigToDB(nwKey string, nw *DbNetworkInfo) error {
 	rawData, err := json.Marshal(nw)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func Write_Nw_Config_to_DB(nwKey string, nw *Db_Network_Info) error {
 	return err
 }
 
-func Read_Nw_Config_From_DB(nwKey string) (*Db_Network_Info, error) {
+func ReadNwConfigFromDB(nwKey string) (*DbNetworkInfo, error) {
 	nwFile := filepath.Join(persistConfigPath, nwKey, "config.json")
 	_, err := os.Lstat(nwFile)
 	if err != nil {
@@ -66,7 +66,7 @@ func Read_Nw_Config_From_DB(nwKey string) (*Db_Network_Info, error) {
 		return nil, err2
 	}
 
-	nw := Db_Network_Info{}
+	nw := DbNetworkInfo{}
 	err = json.Unmarshal(rawData, &nw)
 	if err != nil {
 		return nil, err
@@ -75,14 +75,14 @@ func Read_Nw_Config_From_DB(nwKey string) (*Db_Network_Info, error) {
 	}
 }
 
-func Del_Nw_Config_From_DB(nwKey string) error {
+func DeleteNwConfigFromDB(nwKey string) error {
 	nwDir := filepath.Join(persistConfigPath, nwKey)
 	os.RemoveAll(nwDir)
 	return nil
 }
 
-func Read_Past_Config(configDir string) (map[string]*Db_Network_Info, error) {
-	nwList := make(map[string]*Db_Network_Info)
+func ReadAllNwConfigs(configDir string) (map[string]*DbNetworkInfo, error) {
+	nwList := make(map[string]*DbNetworkInfo)
 
 	_, err := os.Lstat(configDir)
 	if err != nil {
@@ -103,7 +103,7 @@ func Read_Past_Config(configDir string) (map[string]*Db_Network_Info, error) {
 	}
 
 	for _, info := range nwKeys {
-		nwInfo, err3 := Read_Nw_Config_From_DB(info.Name())
+		nwInfo, err3 := ReadNwConfigFromDB(info.Name())
 		if err3 != nil {
 			return nil, err3
 		}

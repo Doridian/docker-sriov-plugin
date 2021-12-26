@@ -168,7 +168,7 @@ func (d *driver) createNetwork(nid string, options map[string]string,
 	d.networks[nid] = nw
 
 	if storeConfig == true {
-		nwDbEntry := Db_Network_Info{}
+		nwDbEntry := DbNetworkInfo{}
 		nwDbEntry.Mode = options[networkMode]
 		nwDbEntry.Netdev = options[networkDevice]
 		nwDbEntry.Vlan, _ = strconv.Atoi(options[sriovVlan])
@@ -181,7 +181,7 @@ func (d *driver) createNetwork(nid string, options map[string]string,
 			nwDbEntry.Privileged = false
 		}
 
-		err = Write_Nw_Config_to_DB(nid, &nwDbEntry)
+		err = WriteNwConfigToDB(nid, &nwDbEntry)
 		if err != nil {
 			return err
 		}
@@ -233,7 +233,7 @@ func (d *driver) DeleteNetwork(req *network.DeleteNetworkRequest) error {
 
 	delete(d.networks, req.NetworkID)
 
-	Del_Nw_Config_From_DB(req.NetworkID)
+	DeleteNwConfigFromDB(req.NetworkID)
 	return nil
 }
 
@@ -242,7 +242,7 @@ func (d *driver) FreeNetwork(r *network.FreeNetworkRequest) error {
 	return nil
 }
 
-func BuildNetworkOptions(nwDbEntry *Db_Network_Info) (map[string]string, error) {
+func BuildNetworkOptions(nwDbEntry *DbNetworkInfo) (map[string]string, error) {
 	options := make(map[string]string)
 
 	options[networkDevice] = nwDbEntry.Netdev
@@ -258,7 +258,7 @@ func BuildNetworkOptions(nwDbEntry *Db_Network_Info) (map[string]string, error) 
 }
 
 func (d *driver) CreatePersistentNetworks() error {
-	nwList, err := Read_Past_Config(persistConfigPath)
+	nwList, err := ReadAllNwConfigs(persistConfigPath)
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func (d *driver) CreatePersistentNetworks() error {
 }
 
 func (d *driver) ValidatePersistentNetworks() error {
-	nwList, err := Read_Past_Config(persistConfigPath)
+	nwList, err := ReadAllNwConfigs(persistConfigPath)
 	if err != nil {
 		return err
 	}
