@@ -20,7 +20,7 @@ func Run(ctx *cli.Context) {
 	}
 	h := network.NewHandler(d)
 
-	log.Printf("Mellanox sriov plugin started version=%v\n", version)
+	log.Printf("Docker sriov plugin started version=%v\n", version)
 	log.Printf("Ready to accept commands.\n")
 
 	err = h.ServeUnix("sriov", 0)
