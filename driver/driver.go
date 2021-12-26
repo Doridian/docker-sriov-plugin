@@ -105,20 +105,7 @@ func parseNetworkGenericOptions(data interface{}) (map[string]string, error) {
 	switch opt := data.(type) {
 	case map[string]interface{}:
 		for key, value := range opt {
-			//switch key {
-			//case networkDevice:
 			options[key] = fmt.Sprintf("%s", value)
-			//case networkMode:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case sriovVlan:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case networkPrivileged:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case ethPrefix:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case roceHopLimit:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//}
 		}
 		log.Printf("parseNetworkGenericOptions %v\n", options)
 	default:
@@ -150,7 +137,6 @@ func parseNetworkGenericOptions(data interface{}) (map[string]string, error) {
 }
 
 func parseNetworkOptions(id string, option options.Generic) (map[string]string, error) {
-
 	// parse generic labels first
 	genData, ok := option[netlabel.GenericData]
 	if ok && genData != nil {
@@ -314,15 +300,8 @@ func (d *driver) ValidatePersistentNetworks() error {
 }
 
 func StartDriver() (*driver, error) {
-	// allocate an empty map of network objects that can
-	// be later on referred by using id passed in CreateNetwork, DeleteNetwork
-	// etc operations.
-
-	//dnetworks := make(map[string]interface{})
-	dnetworks := make(map[string]NwIface)
-
 	driver := &driver{
-		networks: dnetworks,
+		networks: make(map[string]NwIface),
 	}
 
 	err := driver.CreatePersistentNetworks()
@@ -518,9 +497,6 @@ func (nw *ptNetwork) CreateEndpoint(r *network.CreateEndpointRequest) (*network.
 	endpointInterface := &network.EndpointInterface{}
 	if r.Interface.Address == "" {
 		endpointInterface.Address = ndev.Address
-	}
-	if r.Interface.MacAddress == "" {
-		//endpointInterface.MacAddress = ndev.HardwareAddr
 	}
 	resp := &network.CreateEndpointResponse{Interface: endpointInterface}
 	log.Printf("PT CreateEndpoint resp interface: [ %+v ] ", resp.Interface)

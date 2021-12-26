@@ -100,7 +100,6 @@ func (nw *dpSriovNetwork) CreateNetwork(d *driver, genNw *genericNetwork,
 }
 
 func (nw *dpSriovNetwork) initSriovState(pfNetdevName string, dev *dpPfDevice) error {
-
 	var err error
 
 	dev.childNetdevLlist, err = GetChildNetdevListByPort(pfNetdevName)
@@ -215,7 +214,6 @@ func (nw *dpSriovNetwork) CreateEndpoint(r *network.CreateEndpointRequest) (*net
 }
 
 func (nw *dpSriovNetwork) DeleteEndpoint(endpoint *ptEndpoint) {
-
 	dev := dpPfDevices[nw.genNw.ndevName]
 
 	nw.FreeVF(dev, endpoint.vfName)
@@ -223,7 +221,6 @@ func (nw *dpSriovNetwork) DeleteEndpoint(endpoint *ptEndpoint) {
 }
 
 func (nw *dpSriovNetwork) DeleteNetwork(d *driver, req *network.DeleteNetworkRequest) {
-
 	dev := dpPfDevices[nw.genNw.ndevName]
 	dev.nwUseRefCount--
 
