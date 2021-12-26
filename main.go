@@ -23,7 +23,7 @@ func Run(ctx *cli.Context) {
 	log.Printf("Mellanox sriov plugin started version=%v\n", version)
 	log.Printf("Ready to accept commands.\n")
 
-	err = h.ServeUnix("sriov", 0)
+	err = h.ServeUnix(driver.DriverName, 0)
 	if err != nil {
 		log.Fatalf("Run app error: %s", err.Error())
 		os.Exit(1)
@@ -37,7 +37,7 @@ func main() {
 		Usage: "enable debugging",
 	}
 	app := cli.NewApp()
-	app.Name = "sriov"
+	app.Name = driver.DriverName
 	app.Usage = "Docker Networking using SRIOV/Passthrough netdevices"
 	app.Version = version
 	app.Flags = []cli.Flag{

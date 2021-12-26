@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
 
@@ -23,7 +22,7 @@ func getRightClientApiVersion() (string, error) {
 	return allVersions.APIVersion, nil
 }
 
-func getRightClient() (*client.Client, error) {
+func GetDockerAPIClient() (*client.Client, error) {
 	var clientVersion string
 
 	desiredVersion, err := getRightClientApiVersion()
@@ -37,22 +36,4 @@ func getRightClient() (*client.Client, error) {
 		return cli, nil
 	}
 	return nil, err
-}
-
-func IsNetworkIdValid(id string) bool {
-	cli, err := getRightClient()
-	if err != nil {
-		return false
-	}
-	networks, err := cli.NetworkList(context.Background(), types.NetworkListOptions{})
-	if err != nil {
-		return false
-	}
-
-	for _, network := range networks {
-		if network.ID == id {
-			return true
-		}
-	}
-	return false
 }

@@ -1,16 +1,15 @@
 package driver
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"path/filepath"
 	"reflect"
-	"strconv"
 	"sync"
 
 	"github.com/Mellanox/sriovnet"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/go-plugins-helpers/network"
 	"github.com/docker/libnetwork/netlabel"
 	"github.com/docker/libnetwork/options"
@@ -27,6 +26,8 @@ const (
 	networkPrivileged = "privileged"
 	ethPrefix         = "prefix"
 	roceHopLimit      = "rocehoplimit"
+
+	DriverName = "sriov"
 )
 
 type ptEndpoint struct {
@@ -73,7 +74,8 @@ type NwIface interface {
 
 type driver struct {
 	// below map maps a network id to NwInterface object
-	networks map[string]NwIface
+	networks        map[string]NwIface
+	networksFetched bool
 	sync.Mutex
 }
 
@@ -105,22 +107,11 @@ func parseNetworkGenericOptions(data interface{}) (map[string]string, error) {
 	switch opt := data.(type) {
 	case map[string]interface{}:
 		for key, value := range opt {
-			//switch key {
-			//case networkDevice:
 			options[key] = fmt.Sprintf("%s", value)
-			//case networkMode:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case sriovVlan:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case networkPrivileged:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case ethPrefix:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//case roceHopLimit:
-			//	options[key] = fmt.Sprintf("%s", value)
-			//}
 		}
 		log.Printf("parseNetworkGenericOptions %v\n", options)
+	case map[string]string:
+		options = opt
 	default:
 		log.Printf("unrecognized network config format: %v\n", reflect.TypeOf(opt))
 	}
@@ -150,7 +141,6 @@ func parseNetworkGenericOptions(data interface{}) (map[string]string, error) {
 }
 
 func parseNetworkOptions(id string, option options.Generic) (map[string]string, error) {
-
 	// parse generic labels first
 	genData, ok := option[netlabel.GenericData]
 	if ok && genData != nil {
@@ -161,67 +151,87 @@ func parseNetworkOptions(id string, option options.Generic) (map[string]string, 
 	return nil, fmt.Errorf("invalid options")
 }
 
-func (d *driver) _CreateNetwork(nid string, options map[string]string,
-	ipv4Data *network.IPAMData, storeConfig bool) error {
+func (d *driver) createNetwork(nid string, options map[string]string,
+	ipv4Data *network.IPAMData) (NwIface, error) {
 	var err error
 
 	genNw := createGenNw(nid, options[networkDevice], options[networkMode], options[ethPrefix], ipv4Data)
 
+	var nw NwIface
 	if options[networkMode] == "passthrough" {
-		nw := ptNetwork{}
-		err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-		if err != nil {
-			return err
-		}
-		d.networks[nid] = &nw
+		nw = &ptNetwork{}
 	} else {
 		var multiport bool
 
 		multiport = checkMultiPortDevice(options[networkDevice])
 		if multiport == true {
 			log.Println("Multiport driver for device: ", options[networkDevice])
-			nw := dpSriovNetwork{}
-			err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-			if err != nil {
-				return err
-			}
-			d.networks[nid] = &nw
+			nw = &dpSriovNetwork{}
 		} else {
 			log.Println("Single port driver for device: ", options[networkDevice])
-			nw := sriovNetwork{}
-			err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-			if err != nil {
-				return err
-			}
-			d.networks[nid] = &nw
+			nw = &sriovNetwork{}
 		}
 	}
 
-	if storeConfig == true {
-		nwDbEntry := Db_Network_Info{}
-		nwDbEntry.Mode = options[networkMode]
-		nwDbEntry.Netdev = options[networkDevice]
-		nwDbEntry.Vlan, _ = strconv.Atoi(options[sriovVlan])
-		nwDbEntry.Gateway = ipv4Data.Gateway
-		nwDbEntry.Prefix = options[ethPrefix]
+	err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
+	if err != nil {
+		return nil, err
+	}
+	return nw, nil
+}
 
-		if options[networkPrivileged] == "1" {
-			nwDbEntry.Privileged = true
-		} else {
-			nwDbEntry.Privileged = false
+func (d *driver) registerNetwork(nid string, options map[string]string,
+	ipv4Data *network.IPAMData) error {
+
+	net, err := d.createNetwork(nid, options, ipv4Data)
+	if err == nil {
+		d.networks[nid] = net
+	}
+	return err
+}
+
+func (d *driver) ensureNetworksFetched() {
+	d.Lock()
+	defer d.Unlock()
+
+	if d.networksFetched {
+		return
+	}
+
+	cli, err := GetDockerAPIClient()
+	if err != nil {
+		log.Printf("ensureNetworksFetched(): GetAPIClient %v\n", err)
+		return
+	}
+	networks, err := cli.NetworkList(context.Background(), types.NetworkListOptions{})
+	if err != nil {
+		log.Printf("ensureNetworksFetched(): List %v\n", err)
+		return
+	}
+
+	for _, net := range networks {
+		if net.Driver != DriverName {
+			continue
 		}
-
-		err = Write_Nw_Config_to_DB(nid, &nwDbEntry)
-		if err != nil {
-			return err
+		ipv4Data := network.IPAMData{}
+		ipv4Data.Gateway = net.IPAM.Config[0].Gateway
+		options, errp := parseNetworkGenericOptions(net.Options)
+		if errp != nil {
+			log.Printf("ensureNetworksFetched(): Parse %v\n", errp)
+			continue
+		}
+		errp = d.registerNetwork(net.ID, options, &ipv4Data)
+		if errp != nil {
+			log.Printf("ensureNetworksFetched(): Register %v\n", errp)
+			continue
 		}
 	}
 
-	return nil
+	d.networksFetched = true
 }
 
 func (d *driver) CreateNetwork(req *network.CreateNetworkRequest) error {
-	var err error
+	d.ensureNetworksFetched()
 
 	log.Printf("CreateNetwork() : [ %+v ]\n", req)
 	log.Printf("CreateNetwork IPv4Data len : [ %v ]\n", len(req.IPv4Data))
@@ -241,8 +251,7 @@ func (d *driver) CreateNetwork(req *network.CreateNetworkRequest) error {
 
 	ipv4Data := req.IPv4Data[0]
 
-	err = d._CreateNetwork(req.NetworkID, options, ipv4Data, true)
-	return err
+	return d.registerNetwork(req.NetworkID, options, ipv4Data)
 }
 
 func (d *driver) AllocateNetwork(r *network.AllocateNetworkRequest) (*network.AllocateNetworkResponse, error) {
@@ -251,6 +260,7 @@ func (d *driver) AllocateNetwork(r *network.AllocateNetworkRequest) (*network.Al
 }
 
 func (d *driver) DeleteNetwork(req *network.DeleteNetworkRequest) error {
+	d.ensureNetworksFetched()
 
 	log.Printf("DeleteNetwork() [ %+v ]\n", req)
 
@@ -264,67 +274,11 @@ func (d *driver) DeleteNetwork(req *network.DeleteNetworkRequest) error {
 
 	delete(d.networks, req.NetworkID)
 
-	Del_Nw_Config_From_DB(req.NetworkID)
 	return nil
 }
 
 func (d *driver) FreeNetwork(r *network.FreeNetworkRequest) error {
 	log.Printf("FreeNetwork() [ %+v ]\n", r)
-	return nil
-}
-
-func BuildNetworkOptions(nwDbEntry *Db_Network_Info) (map[string]string, error) {
-
-	options := make(map[string]string)
-
-	options[networkDevice] = nwDbEntry.Netdev
-	options[networkMode] = nwDbEntry.Mode
-	options[sriovVlan] = strconv.Itoa(nwDbEntry.Vlan)
-	if nwDbEntry.Privileged {
-		options[networkPrivileged] = "1"
-	} else {
-		options[networkPrivileged] = "0"
-	}
-	options[ethPrefix] = nwDbEntry.Prefix
-	return options, nil
-}
-
-func (d *driver) CreatePersistentNetworks() error {
-	nwList, err := Read_Past_Config(persistConfigPath)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nwList {
-		options, _ := BuildNetworkOptions(&n.Info)
-
-		ipv4Data := network.IPAMData{}
-		ipv4Data.Gateway = n.Info.Gateway
-
-		/* Create nw, but ignore the error.
-		 * This can happen when plugin is stopped and networks are
-		 * Deleted at the docker engine level, which plugin is
-		 * completely unaware of.
-		 */
-		_ = d._CreateNetwork(n.NetworkID, options, &ipv4Data, false)
-	}
-	return nil
-}
-
-func (d *driver) ValidatePersistentNetworks() error {
-	nwList, err := Read_Past_Config(persistConfigPath)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nwList {
-		if IsNetworkIdValid(n.NetworkID) == false {
-			nwDir := filepath.Join(persistConfigPath, n.NetworkID)
-			os.RemoveAll(nwDir)
-			log.Println("Skipping and deleting stale network: ", n.NetworkID)
-			continue
-		}
-	}
 	return nil
 }
 
@@ -334,24 +288,17 @@ func StartDriver() (*driver, error) {
 	// be later on referred by using id passed in CreateNetwork, DeleteNetwork
 	// etc operations.
 
-	//dnetworks := make(map[string]interface{})
 	dnetworks := make(map[string]NwIface)
 
 	driver := &driver{
 		networks: dnetworks,
 	}
 
-	err := driver.CreatePersistentNetworks()
-	if err != nil {
-		return nil, err
-	}
-
-	go driver.ValidatePersistentNetworks()
-
 	return driver, nil
 }
 
 func (d *driver) CreateEndpoint(r *network.CreateEndpointRequest) (*network.CreateEndpointResponse, error) {
+	d.ensureNetworksFetched()
 	d.Lock()
 	defer d.Unlock()
 
@@ -375,6 +322,7 @@ func (nw *ptNetwork) getGenNw() *genericNetwork {
 }
 
 func (d *driver) getGenNwFromNetworkID(networkID string) *genericNetwork {
+	d.ensureNetworksFetched()
 	nw := d.networks[networkID]
 	if nw == nil {
 		return nil
@@ -464,6 +412,7 @@ func (d *driver) Leave(r *network.LeaveRequest) error {
 }
 
 func (d *driver) DeleteEndpoint(r *network.DeleteEndpointRequest) error {
+	d.ensureNetworksFetched()
 	log.Printf("DeleteEndpoint() [ %+v ]\n", r)
 
 	d.Lock()
