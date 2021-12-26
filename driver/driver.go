@@ -295,18 +295,18 @@ func (d *driver) CreatePersistentNetworks() error {
 		return err
 	}
 
-	for _, n := range nwList {
-		options, _ := BuildNetworkOptions(&n.Info)
+	for id, info := range nwList {
+		options, _ := BuildNetworkOptions(info)
 
 		ipv4Data := network.IPAMData{}
-		ipv4Data.Gateway = n.Info.Gateway
+		ipv4Data.Gateway = info.Gateway
 
 		/* Create nw, but ignore the error.
 		 * This can happen when plugin is stopped and networks are
 		 * Deleted at the docker engine level, which plugin is
 		 * completely unaware of.
 		 */
-		_ = d._CreateNetwork(n.NetworkID, options, &ipv4Data, false)
+		_ = d._CreateNetwork(id, options, &ipv4Data, false)
 	}
 	return nil
 }
@@ -317,11 +317,11 @@ func (d *driver) ValidatePersistentNetworks() error {
 		return err
 	}
 
-	for _, n := range nwList {
-		if IsNetworkIdValid(n.NetworkID) == false {
-			nwDir := filepath.Join(persistConfigPath, n.NetworkID)
+	for id, _ := range nwList {
+		if IsNetworkIdValid(id) == false {
+			nwDir := filepath.Join(persistConfigPath, id)
 			os.RemoveAll(nwDir)
-			log.Println("Skipping and deleting stale network: ", n.NetworkID)
+			log.Println("Skipping and deleting stale network: ", id)
 			continue
 		}
 	}

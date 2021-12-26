@@ -13,12 +13,8 @@ const (
 
 /* Configuration layout
 config/
-	version.json
 		nw-1/
 			config.json
-			ep1.json
-			ep2.json
-			ep3.json
 		nw-2/
 		nw-3/
 */
@@ -32,17 +28,6 @@ type Db_Network_Info struct {
 	Vlan       int    `json:"vlan"`
 	Privileged bool   `json:"Privileged"`
 	Prefix     string `json:"Prefix"`
-}
-
-/* Endpoint config.json */
-type DB_Endpoint struct {
-	Version   uint32 `json:"Version"`
-	HwAddress string `json:"Hw_Address"`
-}
-
-type Db_Network struct {
-	NetworkID string
-	Info      Db_Network_Info
 }
 
 func Write_Nw_Config_to_DB(nwKey string, nw *Db_Network_Info) error {
@@ -68,7 +53,6 @@ func Write_Nw_Config_to_DB(nwKey string, nw *Db_Network_Info) error {
 }
 
 func Read_Nw_Config_From_DB(nwKey string) (*Db_Network_Info, error) {
-
 	nwFile := filepath.Join(persistConfigPath, nwKey, "config.json")
 	_, err := os.Lstat(nwFile)
 	if err != nil {
@@ -92,14 +76,13 @@ func Read_Nw_Config_From_DB(nwKey string) (*Db_Network_Info, error) {
 }
 
 func Del_Nw_Config_From_DB(nwKey string) error {
-
 	nwDir := filepath.Join(persistConfigPath, nwKey)
 	os.RemoveAll(nwDir)
 	return nil
 }
 
-func Read_Past_Config(configDir string) ([]*Db_Network, error) {
-	var nwList []*Db_Network
+func Read_Past_Config(configDir string) (map[string]*Db_Network_Info, error) {
+	nwList := make(map[string]*Db_Network_Info)
 
 	_, err := os.Lstat(configDir)
 	if err != nil {
@@ -119,15 +102,12 @@ func Read_Past_Config(configDir string) ([]*Db_Network, error) {
 		return nil, err3
 	}
 
-	for i := range nwKeys {
-		nwInfo, err3 := Read_Nw_Config_From_DB(nwKeys[i].Name())
+	for _, info := range nwKeys {
+		nwInfo, err3 := Read_Nw_Config_From_DB(info.Name())
 		if err3 != nil {
 			return nil, err3
 		}
-		nw := Db_Network{}
-		nw.NetworkID = nwKeys[i].Name()
-		nw.Info = *nwInfo
-		nwList = append(nwList, &nw)
+		nwList[info.Name()] = *&nwInfo
 	}
 	return nwList, nil
 }
