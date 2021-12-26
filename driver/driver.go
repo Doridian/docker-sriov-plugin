@@ -167,35 +167,22 @@ func (d *driver) createNetwork(nid string, options map[string]string,
 
 	genNw := createGenNw(nid, options[networkDevice], options[networkMode], options[ethPrefix], ipv4Data)
 
+	var nw NwIface
 	if options[networkMode] == "passthrough" {
-		nw := ptNetwork{}
-		err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-		if err != nil {
-			return err
-		}
-		d.networks[nid] = &nw
+		nw = &ptNetwork{}
+	} else if checkMultiPortDevice(options[networkDevice]) {
+		log.Println("Multiport driver for device: ", options[networkDevice])
+		nw = &dpSriovNetwork{}
 	} else {
-		var multiport bool
-
-		multiport = checkMultiPortDevice(options[networkDevice])
-		if multiport == true {
-			log.Println("Multiport driver for device: ", options[networkDevice])
-			nw := dpSriovNetwork{}
-			err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-			if err != nil {
-				return err
-			}
-			d.networks[nid] = &nw
-		} else {
-			log.Println("Single port driver for device: ", options[networkDevice])
-			nw := sriovNetwork{}
-			err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
-			if err != nil {
-				return err
-			}
-			d.networks[nid] = &nw
-		}
+		log.Println("Single port driver for device: ", options[networkDevice])
+		nw = &sriovNetwork{}
 	}
+
+	err = nw.CreateNetwork(d, genNw, nid, options, ipv4Data)
+	if err != nil {
+		return err
+	}
+	d.networks[nid] = nw
 
 	if storeConfig == true {
 		nwDbEntry := Db_Network_Info{}
