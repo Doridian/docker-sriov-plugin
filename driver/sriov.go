@@ -204,9 +204,6 @@ func (nw *sriovNetwork) CreateEndpoint(r *network.CreateEndpointRequest) (*netwo
 	if r.Interface.Address == "" {
 		endpointInterface.Address = ndev.Address
 	}
-	if r.Interface.MacAddress == "" {
-		//endpointInterface.MacAddress = ndev.HardwareAddr
-	}
 	resp := &network.CreateEndpointResponse{Interface: endpointInterface}
 
 	log.Printf("SRIOV CreateEndpoint resp interface: [ %+v ]\n", resp.Interface)
