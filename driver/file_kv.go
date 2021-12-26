@@ -28,7 +28,6 @@ type Db_Network_Info struct {
 	Version    uint32 `json:"Version"`
 	Netdev     string `json:"Netdevice"`
 	Mode       string `json:"Mode"`
-	Subnet     string `json:"Subnet"`
 	Gateway    string `json:"Gateway"`
 	Vlan       int    `json:"vlan"`
 	Privileged bool   `json:"Privileged"`
