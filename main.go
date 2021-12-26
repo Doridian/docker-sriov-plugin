@@ -31,18 +31,11 @@ func Run(ctx *cli.Context) {
 }
 
 func main() {
-
-	var flagDebug = cli.BoolFlag{
-		Name:  "debug, d",
-		Usage: "enable debugging",
-	}
 	app := cli.NewApp()
 	app.Name = "sriov"
 	app.Usage = "Docker Networking using SRIOV/Passthrough netdevices"
 	app.Version = version
-	app.Flags = []cli.Flag{
-		flagDebug,
-	}
+	app.Flags = []cli.Flag{}
 	app.Action = Run
 	app.Run(os.Args)
 }

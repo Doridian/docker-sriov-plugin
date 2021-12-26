@@ -107,7 +107,6 @@ func netdevDisableSRIOV(name string) error {
 }
 
 func vfNetdevNameFromParent(parentNetdev string, vfDir string) string {
-
 	devDirName := netDevDeviceDir(parentNetdev)
 
 	vfNetdev, _ := lsFilesWithPrefix(devDirName+"/"+vfDir+"/"+"net", "", false)
@@ -171,7 +170,6 @@ func GetVfPciDevList(name string) ([]string, error) {
 }
 
 func GetVFDefaultMacAddr(vfNetdevName string) (string, error) {
-
 	ethHandle, err1 := netlink.LinkByName(vfNetdevName)
 	if err1 != nil {
 		return "", err1
@@ -182,7 +180,6 @@ func GetVFDefaultMacAddr(vfNetdevName string) (string, error) {
 }
 
 func SetVFDefaultMacAddress(parentNetdev string, vfDir string, vfNetdevName string) error {
-
 	vfIndexStr := strings.TrimPrefix(vfDir, "virtfn")
 	vfIndex, _ := strconv.Atoi(vfIndexStr)
 	ethHandle, err1 := netlink.LinkByName(vfNetdevName)
@@ -201,7 +198,6 @@ func SetVFDefaultMacAddress(parentNetdev string, vfDir string, vfNetdevName stri
 }
 
 func SetVFVlan(parentNetdev string, vfDir string, vlan int) error {
-
 	vfIndexStr := strings.TrimPrefix(vfDir, "virtfn")
 	vfIndex, _ := strconv.Atoi(vfIndexStr)
 
@@ -215,7 +211,6 @@ func SetVFVlan(parentNetdev string, vfDir string, vlan int) error {
 }
 
 func SetVFPrivileged(parentNetdev string, vfDir string, privileged bool) error {
-
 	var spoofChk bool
 	var trusted bool
 
@@ -258,7 +253,6 @@ func SetPFLinkUp(parentNetdev string) error {
 }
 
 func IsSRIOVSupported(netdevName string) bool {
-
 	maxvfs, err := netdevGetMaxVFCount(netdevName)
 	if maxvfs == 0 || err != nil {
 		return false
@@ -268,7 +262,6 @@ func IsSRIOVSupported(netdevName string) bool {
 }
 
 func FindVFDirForNetdev(pfNetdevName string, vfNetdevName string) (string, error) {
-
 	virtFnDirs, err := GetVfPciDevList(pfNetdevName)
 	if err != nil || len(virtFnDirs) == 0 {
 		return "", fmt.Errorf("No vfs found for %v", vfNetdevName)

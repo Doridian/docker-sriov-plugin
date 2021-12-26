@@ -117,7 +117,6 @@ func (nw *sriovNetwork) CreateNetwork(d *driver, genNw *genericNetwork,
 }
 
 func disableSRIOV(pfNetdevName string) {
-
 	sriovnet.DisableSriov(pfNetdevName)
 	dev := pfDevices[pfNetdevName]
 	dev.state = SRIOV_DISABLED
@@ -241,13 +240,11 @@ func (nw *sriovNetwork) CreateEndpoint(r *network.CreateEndpointRequest) (*netwo
 }
 
 func (nw *sriovNetwork) DeleteEndpoint(endpoint *ptEndpoint) {
-
 	dev := pfDevices[nw.genNw.ndevName]
 	sriovnet.FreeVf(dev.pfHandle, endpoint.vfObj)
 }
 
 func (nw *sriovNetwork) DeleteNetwork(d *driver, req *network.DeleteNetworkRequest) {
-
 	dev := pfDevices[nw.genNw.ndevName]
 	dev.nwUseRefCount--
 

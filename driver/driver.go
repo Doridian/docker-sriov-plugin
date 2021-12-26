@@ -238,7 +238,6 @@ func (d *driver) AllocateNetwork(r *network.AllocateNetworkRequest) (*network.Al
 }
 
 func (d *driver) DeleteNetwork(req *network.DeleteNetworkRequest) error {
-
 	log.Printf("DeleteNetwork() [ %+v ]\n", req)
 
 	d.Lock()
@@ -261,7 +260,6 @@ func (d *driver) FreeNetwork(r *network.FreeNetworkRequest) error {
 }
 
 func BuildNetworkOptions(nwDbEntry *Db_Network_Info) (map[string]string, error) {
-
 	options := make(map[string]string)
 
 	options[networkDevice] = nwDbEntry.Netdev
@@ -316,7 +314,6 @@ func (d *driver) ValidatePersistentNetworks() error {
 }
 
 func StartDriver() (*driver, error) {
-
 	// allocate an empty map of network objects that can
 	// be later on referred by using id passed in CreateNetwork, DeleteNetwork
 	// etc operations.
