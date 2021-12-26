@@ -39,20 +39,19 @@ func getRightClient() (*client.Client, error) {
 	return nil, err
 }
 
-func IsNetworkIdValid(id string) bool {
+func GetNetworkList() (map[string]types.NetworkResource, error) {
 	cli, err := getRightClient()
 	if err != nil {
-		return false
+		return nil, err
 	}
 	networks, err := cli.NetworkList(context.Background(), types.NetworkListOptions{})
 	if err != nil {
-		return false
+		return nil, err
 	}
 
+	res := make(map[string]types.NetworkResource)
 	for _, network := range networks {
-		if network.ID == id {
-			return true
-		}
+		res[network.ID] = network
 	}
-	return false
+	return res, nil
 }

@@ -93,11 +93,6 @@ func (nw *sriovNetwork) CreateNetwork(d *driver, genNw *genericNetwork,
 
 	nw.genNw = genNw
 
-	err = SetPFLinkUp(ndevName)
-	if err != nil {
-		return fmt.Errorf("Fail to set PF link up: ", err)
-	}
-
 	err = nw.DiscoverVFs(ndevName)
 	if err != nil {
 		return err

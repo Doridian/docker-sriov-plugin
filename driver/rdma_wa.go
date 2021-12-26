@@ -1,7 +1,9 @@
 package driver
 
 import (
+	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/Mellanox/rdmamap"
 )
@@ -14,9 +16,11 @@ func setRoceHopLimitWA(netdevice string, hopLimit uint8) error {
 
 	file := filepath.Join(rdmamap.RdmaClassDir, rdmadev, "ttl", "1", "ttl")
 
-	ttlFile := fileObject{
-		Path: file,
+	ttlFile, err := os.OpenFile(file, os.O_WRONLY, 0444)
+	if err != nil {
+		return err
 	}
-
-	return ttlFile.WriteInt(int(hopLimit))
+	defer ttlFile.Close()
+	_, err = ttlFile.WriteString(strconv.Itoa(int(hopLimit)))
+	return err
 }

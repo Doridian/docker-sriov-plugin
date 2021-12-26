@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Mellanox/sriovnet"
 	"github.com/docker/go-plugins-helpers/network"
@@ -285,15 +286,36 @@ func (d *driver) ValidatePersistentNetworks() error {
 		return err
 	}
 
+	validNetworks, err := GetNetworkList()
+	if err != nil {
+		return err
+	}
+
+	d.Lock()
+	defer d.Unlock()
+
 	for id, _ := range nwList {
-		if IsNetworkIdValid(id) == false {
+		_, valid := validNetworks[id]
+		if !valid {
 			nwDir := filepath.Join(persistConfigPath, id)
 			os.RemoveAll(nwDir)
-			log.Println("Skipping and deleting stale network: ", id)
-			continue
+			log.Println("Deleting stale network: ", id)
+
+			delete(d.networks, id)
 		}
 	}
 	return nil
+}
+
+func (d *driver) loopValidatePersistentNetworks() {
+	for {
+		err := d.ValidatePersistentNetworks()
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second * 5)
+	}
+	log.Printf("loopValidatePersistentNetworks() done")
 }
 
 func StartDriver() (*driver, error) {
@@ -306,7 +328,7 @@ func StartDriver() (*driver, error) {
 		return nil, err
 	}
 
-	go driver.ValidatePersistentNetworks()
+	go driver.loopValidatePersistentNetworks()
 
 	return driver, nil
 }

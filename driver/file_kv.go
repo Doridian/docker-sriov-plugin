@@ -30,19 +30,23 @@ type DbNetworkInfo struct {
 	Prefix     string `json:"Prefix"`
 }
 
+func mkdirp(dir string) error {
+	return os.MkdirAll(dir, 0755)
+}
+
 func WriteNwConfigToDB(nwKey string, nw *DbNetworkInfo) error {
 	rawData, err := json.Marshal(nw)
 	if err != nil {
 		return err
 	}
 
-	err = createDir(persistConfigPath)
+	err = mkdirp(persistConfigPath)
 	if err != nil {
 		return err
 	}
 
 	nwDir := filepath.Join(persistConfigPath, nwKey)
-	err = createDir(nwDir)
+	err = mkdirp(nwDir)
 	if err != nil {
 		return err
 	}
