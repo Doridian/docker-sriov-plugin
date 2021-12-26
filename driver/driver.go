@@ -161,7 +161,7 @@ func parseNetworkOptions(id string, option options.Generic) (map[string]string, 
 	return nil, fmt.Errorf("invalid options")
 }
 
-func (d *driver) _CreateNetwork(nid string, options map[string]string,
+func (d *driver) createNetwork(nid string, options map[string]string,
 	ipv4Data *network.IPAMData, storeConfig bool) error {
 	var err error
 
@@ -241,7 +241,7 @@ func (d *driver) CreateNetwork(req *network.CreateNetworkRequest) error {
 
 	ipv4Data := req.IPv4Data[0]
 
-	err = d._CreateNetwork(req.NetworkID, options, ipv4Data, true)
+	err = d.createNetwork(req.NetworkID, options, ipv4Data, true)
 	return err
 }
 
@@ -306,7 +306,7 @@ func (d *driver) CreatePersistentNetworks() error {
 		 * Deleted at the docker engine level, which plugin is
 		 * completely unaware of.
 		 */
-		_ = d._CreateNetwork(id, options, &ipv4Data, false)
+		_ = d.createNetwork(id, options, &ipv4Data, false)
 	}
 	return nil
 }
