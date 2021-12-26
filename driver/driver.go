@@ -156,9 +156,6 @@ func (d *driver) createNetwork(nid string, options map[string]string,
 	var nw NwIface
 	if options[networkMode] == "passthrough" {
 		nw = &ptNetwork{}
-	} else if checkMultiPortDevice(options[networkDevice]) {
-		log.Println("Multiport driver for device: ", options[networkDevice])
-		nw = &dpSriovNetwork{}
 	} else {
 		log.Println("Single port driver for device: ", options[networkDevice])
 		nw = &sriovNetwork{}

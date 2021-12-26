@@ -116,38 +116,17 @@ func (nw *sriovNetwork) CreateNetwork(d *driver, genNw *genericNetwork,
 	return nil
 }
 
-func disableSRIOV(pfNetdevName string) {
-	sriovnet.DisableSriov(pfNetdevName)
-	dev := pfDevices[pfNetdevName]
-	dev.state = SRIOV_DISABLED
-}
-
 func initSriovState(pfNetdevName string, dev *pfDevice) error {
 	var err error
 
-	enabled := sriovnet.IsSriovEnabled(pfNetdevName)
-
-	if !enabled {
-		err = sriovnet.EnableSriov(pfNetdevName)
-		if err != nil {
-			return fmt.Errorf("Fail to enable sriov: %v", err)
-		}
-		log.Println("Enabled sriov on netdevice: ", pfNetdevName)
+	if !sriovnet.IsSriovEnabled(pfNetdevName) {
+		return fmt.Errorf("sriov not enabled!")
 	}
 
 	dev.pfHandle, err = sriovnet.GetPfNetdevHandle(pfNetdevName)
 	if err != nil {
 		log.Println("fail to get handle: ", pfNetdevName, err)
 		return fmt.Errorf("Fail to get device handle: %v", err)
-	}
-
-	if !enabled {
-		log.Println("Configuring sriov devices: ", pfNetdevName)
-		err = sriovnet.ConfigVfs(dev.pfHandle, true)
-		if err != nil {
-			return fmt.Errorf("Fail to configure vfs: %v", err)
-		}
-		log.Println("Configuring sriov devices done: ", pfNetdevName)
 	}
 
 	dev.state = SRIOV_ENABLED
@@ -252,7 +231,6 @@ func (nw *sriovNetwork) DeleteNetwork(d *driver, req *network.DeleteNetworkReque
 	// So first created network enables SRIOV and
 	// Last network that gets deleted, disables SRIOV.
 	if dev.nwUseRefCount == 0 {
-		disableSRIOV(nw.genNw.ndevName)
 		delete(pfDevices, nw.genNw.ndevName)
 	}
 	delete(networks, nw.genNw.id)

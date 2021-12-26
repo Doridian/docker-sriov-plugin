@@ -95,17 +95,6 @@ func netdevEnableSRIOV(name string) error {
 	}
 }
 
-func netdevDisableSRIOV(name string) error {
-	devDirName := netDevDeviceDir(name)
-
-	devExist := dirExists(devDirName)
-	if !devExist {
-		return fmt.Errorf("device not found")
-	}
-
-	return netdevSetMaxVFCount(name, 0)
-}
-
 func vfNetdevNameFromParent(parentNetdev string, vfDir string) string {
 	devDirName := netDevDeviceDir(parentNetdev)
 

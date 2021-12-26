@@ -56,7 +56,7 @@ The quickstart instructions describe how to start the plugin and make use of it.
 
 **3.** Extract archive to temporary folder
 
-**4.** Copy ibdev2netdev and docker-sriov-plugin to /usr/local/bin
+**4.** Copy docker-sriov-plugin to /usr/local/bin
 
 **5.** Copy docker-sriov-plugin.service to /etc/systemd/system
 
