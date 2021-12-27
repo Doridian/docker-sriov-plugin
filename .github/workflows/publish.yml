@@ -21,3 +21,5 @@ jobs:
         goarch: ${{ matrix.goarch }}
         extra_files: LICENSE README.md docker-sriov-plugin.service
         ldflags: '-X main.version=${{ github.ref_name }}'
+        sha256sum: true
+        md5sum: false
