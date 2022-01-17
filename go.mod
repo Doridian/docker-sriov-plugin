@@ -1,4 +1,4 @@
-module github.com/Doridian/docker-sriov-plugin
+module github.com/FoxDenHome/docker-sriov-plugin
 
 go 1.17
 
