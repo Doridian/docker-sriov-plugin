@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/Mellanox/sriovnet"
 	"github.com/docker/go-plugins-helpers/network"
+	"github.com/k8snetworkplumbingwg/sriovnet"
 )
 
 const (

@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Mellanox/sriovnet"
 	"github.com/docker/go-plugins-helpers/network"
 	"github.com/docker/libnetwork/netlabel"
 	"github.com/docker/libnetwork/options"
+	"github.com/k8snetworkplumbingwg/sriovnet"
 )
 
 const (
