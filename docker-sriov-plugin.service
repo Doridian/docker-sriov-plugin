@@ -1,12 +1,15 @@
 [Unit]
 Description=Docker SR-IOV plugin
 After=network.target
-Before=docker.service
+Before=docker.service libvirtd.service
 
 [Service]
 Type=simple
 Restart=always
+ExecStartPre=-/bin/sh /var/sriov-init-script.sh
+ExecStartPre=-/bin/sh /opt/bengalfox/sriov-manual.sh
 ExecStart=/usr/local/bin/docker-sriov-plugin
+TimeoutStartSec=300
 
 [Install]
 WantedBy=multi-user.target
